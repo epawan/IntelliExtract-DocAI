@@ -1,0 +1,34 @@
+# Dealer Master File
+# Format: dealer_name (variations for fuzzy matching)
+
+dealers:
+  - name: "MKM MOTORS"
+    variations:
+      - "MKM Motors"
+      - "M K M Motors"
+      - "MKM"
+    
+  - name: "SUNSHINE MOTORS"
+    variations:
+      - "Sunshine Motors"
+      - "Sun Shine Motors"
+      - "SUNSHINE"
+    
+  - name: "SONALIKA INTERNATIONAL TRACTORS"
+    variations:
+      - "Sonalika International"
+      - "Sonalika Tractors"
+      - "SONALIKA"
+    
+  - name: "KUBOTA TRACTOR"
+    variations:
+      - "Kubota"
+      - "KUBOTA"
+    
+  - name: "MAHINDRA TRACTORS"
+    variations:
+      - "Mahindra"
+      - "MAHINDRA"
+      - "Mahindra & Mahindra"
+    
+  # Add more dealers as needed

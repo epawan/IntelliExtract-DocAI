@@ -1,0 +1,200 @@
+# Field Configuration for Document AI
+# This YAML defines extractable fields for different invoice types
+# Generalizable - add new invoice types by extending this config
+
+invoice_types:
+  # Default type for tractor quotations (hackathon use case)
+  tractor_quotation:
+    description: "Tractor loan quotations from dealers"
+    
+    fields:
+      dealer_name:
+        type: text
+        required: true
+        description: "Name of the dealer/showroom"
+        extraction_methods:
+          - header_detection
+          - org_ner
+          - keyword_proximity
+        keywords:
+          - "dealer"
+          - "authorized"
+          - "showroom"
+          - "motors"
+          - "tractors"
+          - "agency"
+          - "enterprises"
+        position_hint: top
+        match_type: fuzzy
+        
+      model_name:
+        type: text
+        required: true
+        description: "Tractor/vehicle model name"
+        extraction_methods:
+          - keyword_proximity
+          - table_row
+          - pattern_match
+        keywords:
+          - "model"
+          - "tractor"
+          - "vehicle"
+          - "make"
+        known_brands:
+          - "Mahindra"
+          - "Sonalika"
+          - "John Deere"
+          - "Kubota"
+          - "Eicher"
+          - "Swaraj"
+          - "New Holland"
+          - "Massey Ferguson"
+          - "TAFE"
+          - "Escorts"
+          - "Preet"
+          - "Captain"
+          - "Indo Farm"
+          - "Force"
+          - "Farmtrac"
+        match_type: exact
+        
+      horse_power:
+        type: numeric
+        required: true
+        description: "Horse power of the tractor"
+        extraction_methods:
+          - regex
+          - keyword_proximity
+        patterns:
+          - '(\d{2,3})\s*[Hh][Pp]'
+          - '[Hh][Pp][-:\s]*(\d{2,3})'
+          - '(\d{2,3})\s*H\.?P\.?'
+          - 'HP[-\s]?(\d{2,3})'
+          - '(\d{2,3})\s*अश्वशक्ति'  # Hindi
+        keywords:
+          - "hp"
+          - "horse power"
+          - "horsepower"
+          - "h.p."
+        unit: "HP"
+        match_type: exact
+        
+      asset_cost:
+        type: currency
+        required: true
+        description: "Total cost of the asset"
+        extraction_methods:
+          - regex
+          - amount_detection
+          - keyword_proximity
+        patterns:
+          # Indian number format: lakhs and thousands
+          - '(\d{1,2},?\d{2},?\d{3})'
+          - '(\d+,\d{2},\d{3})'
+          - '(\d{5,7})'
+          # Words for amounts
+          - '[Tt]otal[:\s]*[\₹Rs\.]*\s*(\d[\d,\.]+)'
+          - '[Aa]mount[:\s]*[\₹Rs\.]*\s*(\d[\d,\.]+)'
+          - 'G\.?\s*TOTAL[:\s]*(\d[\d,\.]+)'
+        keywords:
+          - "total"
+          - "amount"
+          - "price"
+          - "cost"
+          - "rupees"
+          - "rs"
+          - "inr"
+        currency: "INR"
+        match_type: exact
+        
+      signature:
+        type: visual
+        required: true
+        description: "Dealer signature presence and location"
+        detector: yolo
+        class_name: signature
+        fallback_detector: contour
+        output:
+          - present  # boolean
+          - bbox     # [x1, y1, x2, y2]
+          
+      stamp:
+        type: visual
+        required: true
+        description: "Dealer stamp/seal presence and location"
+        detector: yolo
+        class_name: stamp
+        fallback_detector: circle_detection
+        output:
+          - present  # boolean
+          - bbox     # [x1, y1, x2, y2]
+
+  # Generic invoice type (for generalization)
+  generic_invoice:
+    description: "Generic invoice for any vendor"
+    
+    fields:
+      vendor_name:
+        type: text
+        required: true
+        extraction_methods:
+          - header_detection
+          - org_ner
+        keywords:
+          - "from"
+          - "vendor"
+          - "seller"
+          - "company"
+        position_hint: top
+        match_type: fuzzy
+        
+      invoice_number:
+        type: text
+        required: false
+        extraction_methods:
+          - regex
+          - keyword_proximity
+        patterns:
+          - '[Ii]nvoice\s*[Nn]o\.?[:\s]*([A-Z0-9-]+)'
+          - '[Bb]ill\s*[Nn]o\.?[:\s]*([A-Z0-9-]+)'
+        keywords:
+          - "invoice no"
+          - "bill no"
+          - "ref no"
+          
+      total_amount:
+        type: currency
+        required: true
+        extraction_methods:
+          - regex
+          - amount_detection
+        patterns:
+          - '[Tt]otal[:\s]*[\₹$Rs\.]*\s*(\d[\d,\.]+)'
+          - '[Gg]rand\s*[Tt]otal[:\s]*(\d[\d,\.]+)'
+        keywords:
+          - "total"
+          - "grand total"
+          - "amount payable"
+
+# OCR Configuration
+ocr_config:
+  engine: paddleocr
+  languages:
+    - en  # English
+    - hi  # Hindi
+    - gu  # Gujarati
+    - mr  # Marathi
+    - ta  # Tamil
+    - te  # Telugu
+  use_gpu: false
+  det_db_thresh: 0.3
+  rec_batch_num: 6
+
+# YOLO Configuration  
+yolo_config:
+  model: yolov8n
+  confidence_threshold: 0.25
+  iou_threshold: 0.45
+  classes:
+    - signature
+    - stamp

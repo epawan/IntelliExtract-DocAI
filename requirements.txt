@@ -1,0 +1,27 @@
+# Document AI - Invoice Field Extraction
+# All CPU-friendly, open-source libraries
+
+# OCR
+paddleocr>=2.7.0
+paddlepaddle>=2.5.0  # CPU version
+easyocr>=1.7.0  # Fallback OCR for validation
+
+# Image Processing
+opencv-python>=4.8.0
+Pillow>=10.0.0
+pdf2image>=1.16.0
+
+# NLP & Text Processing
+spacy>=3.7.0
+rapidfuzz>=3.0.0
+
+# Object Detection (YOLO)
+ultralytics>=8.0.0
+
+# Data Processing
+numpy>=1.24.0
+pyyaml>=6.0.0
+
+# Utilities
+tqdm>=4.66.0
+streamlit>=1.25.0

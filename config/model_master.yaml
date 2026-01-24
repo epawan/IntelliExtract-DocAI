@@ -1,0 +1,41 @@
+# Model Master File
+# Format: exact model names for matching
+
+models:
+  # Sonalika Models
+  - brand: "SONALIKA"
+    models:
+      - "SONALIKA DI 35"
+      - "SONALIKA DI 50"
+      - "SONALIKA DI 60"
+      - "SONALIKA TRACTORS"
+      - "SONALIKA INTERNATIONAL"
+  
+  # Mahindra Models
+  - brand: "MAHINDRA"
+    models:
+      - "MAHINDRA 575 DI"
+      - "MAHINDRA 475 DI"
+      - "MAHINDRA ARJUN"
+      - "MAHINDRA YUVO"
+  
+  # Kubota Models
+  - brand: "KUBOTA"
+    models:
+      - "KUBOTA TRACTOR"
+      - "KUBOTA MU5501"
+      - "KUBOTA B2420"
+  
+  # John Deere Models
+  - brand: "JOHN DEERE"
+    models:
+      - "JOHN DEERE 5050D"
+      - "JOHN DEERE 5310"
+  
+  # Swaraj Models
+  - brand: "SWARAJ"
+    models:
+      - "SWARAJ 855"
+      - "SWARAJ 744"
+  
+  # Add more models as needed

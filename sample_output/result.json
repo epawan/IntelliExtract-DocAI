@@ -1,0 +1,32 @@
+{
+  "doc_id": "172615659_4_pg18",
+  "fields": {
+    "dealer_name": "AUTHORISED DEALER TRACTORS",
+    "model_name": "380SP+ 4OHP 01",
+    "horse_power": 25,
+    "asset_cost": 660000,
+    "signature": {
+      "present": true,
+      "bbox": [
+        149,
+        1347,
+        227,
+        1367
+      ]
+    },
+    "stamp": {
+      "present": true,
+      "bbox": [
+        760,
+        1215,
+        944,
+        1388
+      ]
+    },
+    "dealer_match_confidence": 0.0,
+    "model_match_confidence": 0.0
+  },
+  "confidence": 0.85,
+  "processing_time_sec": 25.88,
+  "cost_estimate_usd": 0.0
+}
