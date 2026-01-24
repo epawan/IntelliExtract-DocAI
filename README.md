@@ -17,7 +17,6 @@ The goal is to provide a generalizes solution that can handle any invoice type (
 
 ### 1. Prerequisites
 - Python 3.10
-- Tesseract OCR (installed on system)
 - `uv` (recommended) or `pip`
 
 ### 2. Installation
@@ -62,13 +61,11 @@ graph TD
     end
 
     subgraph "Textual Understanding"
-    B --> C[OCR Ensemble Pipeline]
+    B --> C[OCR Pipeline]
     C --> D1[PaddleOCR PP-OCRv5]
-    C --> D2[EasyOCR Fallback]
-    C --> D3[Tesseract Fallback]
     end
     
-    D1 & D2 & D3 --> E[Field Extractor]
+    D1 --> E[Field Extractor]
     E --> F[Generalized Spatial Strategy]
     F --> G[Validation & Formatting]
     
@@ -79,7 +76,7 @@ graph TD
 
 ### Key Components
 1. **Generalized Spatial Strategy**: Instead of fixed keyword-based rules, the system identifies fields using visual prominence (font size) and spatial proximity (label-value relationships).
-2. **Multilingual OCR Ensemble**: Combines PaddleOCR (for high-accuracy Devanagari/Gujarati) with fast fallbacks (EasyOCR/Tesseract).
+2. **Multilingual OCR Engine**: Powered by PaddleOCR (PP-OCRv5) for high-accuracy Devanagari (Hindi) and Gujarati support.
 3. **YOLOv8 Visual Layer**: Fine-tuned for signature and official stamp detection directly on the document image.
 
 ---
@@ -133,7 +130,7 @@ By opting for **PaddleOCR and YOLOv8 ONNX**, we achieve local inference with zer
 ---
 
 ## 🛠️ Built With
-- **OCR**: PaddleOCR, EasyOCR, Tesseract
+- **OCR**: PaddleOCR
 - **Vision**: Ultralytics YOLOv8, OpenCV
 - **Logic**: RegEx, RapidFuzz (Fuzzy Matching)
 - **UI**: Streamlit
