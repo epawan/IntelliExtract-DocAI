@@ -1,5 +1,5 @@
-# 📄 Intelligent Document AI for Invoice Field Extraction
-*A solution for the Intelligent Document AI Hackathon*
+# 📄 Intelligent Document AI for Invoice Field Extraction 
+*A solution for the Intelligent Document AI Conclave 4.0 Hackathon*
 
 ## 🌟 Overview
 In modern financial institutions, the automated extraction of key details from invoices, quotations, and semi-structured business documents is critical for accelerating **credit decisioning, vendor reconciliation, and loan disbursal workflows**. Developed as part of a Hackathon challenge, this project provides an intelligent, cost-efficient, and language-agnostic extraction solution.
