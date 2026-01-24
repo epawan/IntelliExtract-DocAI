@@ -57,7 +57,7 @@ graph TD
     A[Input PDF/Image] --> B[Preprocessor]
     
     subgraph "Visual understanding"
-    B --> H[YOLOv8 Signature/Stamp Detector]
+    B --> H[YOLO Signature/Stamp Detector]
     end
 
     subgraph "Textual Understanding"
@@ -77,26 +77,21 @@ graph TD
 ### Key Components
 1. **Generalized Spatial Strategy**: Instead of fixed keyword-based rules, the system identifies fields using visual prominence (font size) and spatial proximity (label-value relationships).
 2. **Multilingual OCR Engine**: Powered by PaddleOCR (PP-OCRv5) for high-accuracy Devanagari (Hindi) and Gujarati support.
-3. **YOLOv8 Visual Layer**: Fine-tuned for signature and official stamp detection directly on the document image.
-
----
+3. **YOLO Visual Layer**: Leverages a fine-tuned **yolo26** model for high-speed signature and official stamp detection directly on the document image.
 
 ## 📈 Implementation & YOLO Metrics
 
-Our system leverages a fine-tuned YOLOv8 model for detecting visual artifacts. Below are the training and validation results:
+Our system leverages a fine-tuned **yolo26** model for detecting visual artifacts. Below are the training and validation results:
 
 ### 1. Training Results & Metrics
 ![Training Results](yolo-tune-images/results.png)
 
-### 2. Training Data Augmentation (Batch 0)
-![Training Batches](yolo-tune-images/train_batch0.jpg)
-
-### 3. Model Performance
+### 2. Model Performance
 | Confusion Matrix | Precision-Recall Curve |
 | :---: | :---: |
 | ![Confusion Matrix](yolo-tune-images/confusion_matrix.png) | ![BoxPR Curve](yolo-tune-images/BoxPR_curve.png) |
 
-### 4. Validation Sample
+### 3. Validation Sample
 Example of successful detection on the validation set:
 ![Validation Labels](yolo-tune-images/val_batch0_labels.jpg)
 
@@ -111,7 +106,7 @@ Example of successful detection on the validation set:
 | **Accuracy (DLA)** | ~92% (Estimated) | ≥95% |
 
 ### Cost/Accuracy Trade-off
-By opting for **PaddleOCR and YOLOv8 ONNX**, we achieve local inference with zero API costs, making it ideal for high-volume banking applications.
+By opting for **PaddleOCR and yolo26 ONNX**, we achieve local inference with zero API costs, making it ideal for high-volume banking applications.
 
 ---
 
@@ -131,6 +126,6 @@ By opting for **PaddleOCR and YOLOv8 ONNX**, we achieve local inference with zer
 
 ## 🛠️ Built With
 - **OCR**: PaddleOCR
-- **Vision**: Ultralytics YOLOv8, OpenCV
+- **Vision**: yolo26, OpenCV
 - **Logic**: RegEx, RapidFuzz (Fuzzy Matching)
 - **UI**: Streamlit
