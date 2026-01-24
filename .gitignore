@@ -1,0 +1,21 @@
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local credentials and editor files
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.DS_Store
+
+# Generated pipeline artifacts
+/output/
+/visualizations/
+/temp_*
+
+# Session artifact generated during ONNX runtime checks
+/:memory:.ses

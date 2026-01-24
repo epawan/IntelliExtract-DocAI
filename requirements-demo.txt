@@ -1,0 +1,16 @@
+# CPU demo environment tested with Python 3.11.
+# Install CPU PyTorch first using the command in README.md.
+# PaddleOCR is optional here; the existing pipeline uses its EasyOCR fallback.
+torch==2.6.0
+torchvision==0.21.0
+easyocr==1.7.2
+ultralytics==8.4.7
+onnxruntime==1.30.0
+opencv-python==4.11.0.86
+opencv-python-headless==4.11.0.86
+numpy==2.4.6
+Pillow==12.3.0
+rapidfuzz==3.14.6
+PyYAML==6.0.3
+pdf2image==1.17.0
+streamlit==1.65.0

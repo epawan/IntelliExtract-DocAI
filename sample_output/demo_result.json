@@ -1,0 +1,27 @@
+{
+  "doc_id": "quotation",
+  "fields": {
+    "dealer_name": "DEMO TRACTOR DEALER",
+    "model_name": "Name MAHINDRA 575 Dl",
+    "horse_power": 45,
+    "asset_cost": 650000,
+    "signature": {
+      "present": true,
+      "bbox": [
+        69,
+        1030,
+        932,
+        1032
+      ]
+    },
+    "stamp": {
+      "present": false,
+      "bbox": []
+    },
+    "dealer_match_confidence": 0.0,
+    "model_match_confidence": 0.0
+  },
+  "confidence": 0.68,
+  "processing_time_sec": 102.26,
+  "cost_estimate_usd": 0.0
+}

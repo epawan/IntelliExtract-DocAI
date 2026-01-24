@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import io
 import json
 import numpy as np
 import cv2
@@ -18,7 +19,6 @@ from utils import save_json
 # --- Premium UI Configurations ---
 st.set_page_config(
     page_title="Intelligent Document AI Dashboard",
-    page_icon="🚜",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -56,7 +56,6 @@ st.markdown("""
 
 def main():
     # --- Sidebar ---
-    st.sidebar.image("https://img.icons8.com/color/96/tractor.png", width=80)
     st.sidebar.title("Pipeline Settings")
     st.sidebar.markdown("---")
     
@@ -68,11 +67,30 @@ def main():
     st.sidebar.info("Backend: PaddleOCR + YOLOv8\nLanguage: EN, HI, GU\nDevice: CPU")
 
     # --- Header ---
-    st.title("🚜 Intelligent Document AI Dashboard")
-    st.markdown("Automated field extraction for **Intelligent Banking Automation**.")
+    st.title("Intelligent Document AI Dashboard")
+    st.markdown("Built for Convolve 4.0 — a Pan-IIT AI/ML Hackathon.")
+    st.warning(
+        "**Early-stage hackathon prototype.** "
+        "This application was built for Convolve 4.0 and remains under development. "
+        "Several components are still being refined and validated. Extracted fields, confidence scores, "
+        "and signature/stamp detections can be incorrect. "
+        "Check every result against the original document before using it."
+    )
     
     # --- Main Interface ---
     uploaded_file = st.file_uploader("Drop your document here (PNG, JPG, PDF)", type=['png', 'jpg', 'jpeg'])
+    if uploaded_file is None and st.checkbox("Try a sample document"):
+        samples_dir = Path(__file__).parent / 'samples'
+        sample_catalog = json.loads((samples_dir / 'index.json').read_text())
+        sample_files = {sample['label']: sample['file'] for sample in sample_catalog}
+        selected_sample = st.selectbox("Sample document", list(sample_files))
+        sample_path = samples_dir / sample_files[selected_sample]
+        uploaded_file = io.BytesIO(sample_path.read_bytes())
+        uploaded_file.name = sample_path.name
+        if sample_path.name == 'quotation.png':
+            st.caption("Synthetic sample: 45 HP, asset cost 650000, with no signature or stamp. Extraction may differ.")
+        else:
+            st.caption("Sample from the original project. Extraction quality varies by language and layout.")
 
     # Initialize Pipeline (Cached)
     @st.cache_resource
@@ -123,7 +141,7 @@ def main():
                         
                         entities = [
                             ("🏛️ Dealer Name", fields.get('dealer_name', 'Not Specified')),
-                            ("🚜 Model Name", fields.get('model_name', 'Not Specified')),
+                            ("Model Name", fields.get('model_name', 'Not Specified')),
                             ("⚡ Horse Power", f"{fields.get('horse_power', 'N/A')} HP"),
                             ("💰 Asset Cost", f"₹ {fields.get('asset_cost', '0'):,}")
                         ]

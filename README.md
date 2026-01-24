@@ -1,131 +1,214 @@
-# 📄 Intelligent Document AI for Invoice Field Extraction 
-*A solution for the Intelligent Document AI Conclave 4.0 Hackathon*
+![IntelliExtract DocAI — animated quotation-to-structured-data pipeline](assets/banner.gif)
 
-## 🌟 Overview
-In modern financial institutions, the automated extraction of key details from invoices, quotations, and semi-structured business documents is critical for accelerating **credit decisioning, vendor reconciliation, and loan disbursal workflows**. Developed as part of a Hackathon challenge, this project provides an intelligent, cost-efficient, and language-agnostic extraction solution.
+# IntelliExtract DocAI
 
-This system is specifically built to handle **tractor loan quotations** that vary significantly in:
-- **Structure & Layout**: Diverse formats from various dealers.
-- **Languages**: Multilingual support for English and vernaculars like **Hindi and Gujarati**.
-- **Document Quality**: Robust handling of scanned documents, handwritten notes, and photographs.
+*A prototype for Convolve 4.0 — a Pan-IIT AI/ML Hackathon*
 
-The goal is to provide a generalizes solution that can handle any invoice type (retail, industrial, etc.) with high accuracy and low latency.
+Extract structured fields from tractor quotations using OCR, layout-aware rules, and signature/stamp detection.
 
----
+Built for the hackathon’s tractor quotation extraction challenge, this project explores extraction from different dealer layouts, handwritten amounts, and stamps overlapping signatures. The pipeline reads the text, pulls out six fields, and returns JSON. You can run it from the command line or inspect results in the Streamlit app.
 
-## 🚀 Quick Start
+**Python · PaddleOCR / EasyOCR · Ultralytics YOLO · OpenCV · Streamlit**
 
-### 1. Prerequisites
-- Python 3.10
-- `uv` (recommended) or `pip`
+[Quick start](#quick-start) · [Output](#structured-output) · [How it works](#how-it-works) · [Evaluation](#evaluation) · [Limitations](#scope-and-limitations)
 
-### 2. Installation
+## What it extracts
+
+| Field | Output |
+| --- | --- |
+| Dealer name | Text, with fuzzy matching against the configured dealer master |
+| Model name | Text, checked against the configured model master |
+| Horsepower | Integer |
+| Asset cost | Integer |
+| Signature | Presence flag and bounding box |
+| Stamp | Presence flag and bounding box |
+
+Results also include document confidence, processing time, and master-match confidence values. Dealer and model reference data live in [`config/`](config/).
+
+## Quick start
+
+### Install
+
+For the local CPU demo, use **Python 3.11** and run commands from the repository root. This setup uses the existing EasyOCR fallback; it does not require PaddleOCR.
+
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/epawan/IntelliExtract-DocAI.git
+cd IntelliExtract-DocAI
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
+python -m pip install -r requirements-demo.txt
 ```
 
-### 3. Usage
-**CLI Mode:**
-```bash
-# Process a single image
-python executable.py path/to/invoice.png -o output.json
+On Windows, activate the environment with `.venv\Scripts\activate`.
 
-# Process a directory
-python executable.py path/to/invoice_directory/ --output batch_results.json
+The original dependency list remains in `requirements.txt`. The demo list pins OpenCV to 4.11 because OpenCV 5 changes the line-array shape expected by the preserved preprocessing code.
+
+For PDF input, install **Poppler** and make its executables available on your `PATH`; conversion uses `pdf2image`. OCR initialization may download pretrained weights, so the first run needs internet access and can take longer. Signature/stamp weights are included in [`models/`](models/README.md).
+
+### Process a document
+
+```bash
+python executable.py path/to/quotation.png --output output/result.json
 ```
 
-**Interactive Dashboard:**
+The CLI accepts PDF, PNG, JPEG, TIFF, and BMP files. **Only the first page of a PDF is processed.**
+
+### Process a directory
+
 ```bash
-uv run python -m streamlit run app.py
+python executable.py path/to/documents --output output/batch.json
 ```
 
-## 🎯 Key Extraction Goals
-The system is designed to extract the following fields into structured JSON format:
-- **Dealer Name**: Extracted and normalized via fuzzy matching.
-- **Model Name**: Exact match against asset masters.
-- **Horse Power**: Precision numeric extraction (e.g., "50 HP" → 50).
-- **Asset Cost**: Total cost extraction (digits only).
-- **Presence of Dealer Signature**: Binary detection with bounding box coordinates.
-- **Presence of Dealer Stamp**: Binary detection with bounding box coordinates.
+Batch output wraps results in a `documents` array. Directory discovery includes PDF, PNG, JPEG, and TIFF files.
 
----
+### Save detection overlays
 
-## 🏗️ Technical Architecture
+```bash
+python executable.py path/to/quotation.png --output output/result.json --visualize
+```
+
+Overlays are saved to `visualizations/`.
+
+### Open the dashboard
+
+```bash
+python -m streamlit run app.py
+```
+
+Upload a PNG or JPEG, or select **Try a sample document**, then run extraction to inspect the input image, extracted fields, confidence, and detection overlays. The dashboard currently accepts images only; use the CLI for PDFs.
+
+## Structured output
+
+The [included sample result](sample_output/result.json) contains this response:
+
+```json
+{
+  "doc_id": "172615659_4_pg18",
+  "fields": {
+    "dealer_name": "AUTHORISED DEALER TRACTORS",
+    "model_name": "380SP+ 4OHP 01",
+    "horse_power": 25,
+    "asset_cost": 660000,
+    "signature": {
+      "present": true,
+      "bbox": [149, 1347, 227, 1367]
+    },
+    "stamp": {
+      "present": true,
+      "bbox": [760, 1215, 944, 1388]
+    },
+    "dealer_match_confidence": 0.0,
+    "model_match_confidence": 0.0
+  },
+  "confidence": 0.85,
+  "processing_time_sec": 25.88,
+  "cost_estimate_usd": 0.0
+}
+```
+
+Bounding boxes use `[x1, y1, x2, y2]` coordinates on the preprocessed image, which may be resized and deskewed.
+
+This is an extraction example, not verified ground truth. Both master-match scores are zero, so the extracted names require review. Its recorded processing time is **25.88 seconds**, not a benchmark across documents or hardware.
+
+## How it works
 
 ```mermaid
-graph TD
-    A[Input PDF/Image] --> B[Preprocessor]
-    
-    subgraph "Visual understanding"
-    B --> H[YOLO Signature/Stamp Detector]
-    end
-
-    subgraph "Textual Understanding"
-    B --> C[OCR Pipeline]
-    C --> D1[PaddleOCR PP-OCRv5]
-    end
-    
-    D1 --> E[Field Extractor]
-    E --> F[Generalized Spatial Strategy]
-    F --> G[Validation & Formatting]
-    
-    H --> J[Confidence Scorer]
-    G --> J
-    J --> K[Structured JSON Output]
+flowchart LR
+    A[PDF or image] --> B[Load first page, resize and deskew]
+    B --> C[OCR text and positions]
+    B --> D[Signature and stamp detection]
+    C --> E[Layout-aware field extraction]
+    E --> F[Confidence scoring and master matching]
+    D --> F
+    F --> G[Structured JSON]
 ```
 
-### Key Components
-1. **Generalized Spatial Strategy**: Instead of fixed keyword-based rules, the system identifies fields using visual prominence (font size) and spatial proximity (label-value relationships).
-2. **Multilingual OCR Engine**: Powered by PaddleOCR (PP-OCRv5) for high-accuracy Devanagari (Hindi) and Gujarati support.
-3. **YOLO Visual Layer**: Leverages a fine-tuned **yolo26** model for high-speed signature and official stamp detection directly on the document image.
+- **OCR:** PaddleOCR with a Devanagari recognition model is preferred; EasyOCR provides a fallback.
+- **Field extraction:** Keyword, numeric, and spatial rules identify quotation fields; validators help filter candidate values.
+- **Visual detection:** The detector prefers the included ONNX weights, then the PyTorch weights. An OpenCV circular-stamp heuristic can supplement stamp detection.
+- **Master matching:** Dealer names use fuzzy matching; model names use exact matching against YAML reference lists.
 
-## 📈 Implementation & YOLO Metrics
+## Evaluation
 
-Our system leverages a fine-tuned **yolo26** model for detecting visual artifacts. Below are the training and validation results:
+The saved plots below show the signature/stamp detector's training run. They measure detection, not the accuracy of dealer names, model names, or amounts.
 
-### 1. Training Results & Metrics
-![Training Results](yolo-tune-images/results.png)
+[Training curves](#training-curves) · [Detection quality](#detection-quality) · [Sample documents](#sample-documents)
 
-### 2. Model Performance
-| Confusion Matrix | Precision-Recall Curve |
-| :---: | :---: |
-| ![Confusion Matrix](yolo-tune-images/confusion_matrix.png) | ![BoxPR Curve](yolo-tune-images/BoxPR_curve.png) |
+### Training curves
 
-### 3. Validation Sample
-Example of successful detection on the validation set:
-![Validation Labels](yolo-tune-images/val_batch0_labels.jpg)
+[![Training and validation losses, precision, recall, and mAP over 100 epochs](yolo-tune-images/results.png)](yolo-tune-images/results.png)
 
----
+The losses generally fall over the run. The final plotted mAP@50 is around **0.49**, and mAP@50–95 around **0.32**. These are approximate readings from the image; the raw metric log is not included.
 
-## 📊 Performance Analysis
+### Detection quality
 
-| Metric | Result | Target |
-|--------|--------|--------|
-| **Latency (CPU)** | 1.8s - 4.5s | <30s |
-| **Cost per Doc** | $0.00 | <$0.01 |
-| **Accuracy (DLA)** | ~92% (Estimated) | ≥95% |
+Click an image to open it at full size.
 
-### Cost/Accuracy Trade-off
-By opting for **PaddleOCR and yolo26 ONNX**, we achieve local inference with zero API costs, making it ideal for high-volume banking applications.
+| Precision–recall | Confusion matrix |
+| --- | --- |
+| [![Precision–recall curve](yolo-tune-images/BoxPR_curve.png)](yolo-tune-images/BoxPR_curve.png) | [![Confusion matrix](yolo-tune-images/confusion_matrix.png)](yolo-tune-images/confusion_matrix.png) |
 
----
+<details>
+<summary>More curves: F1 and recall</summary>
 
-## 📂 Project Structure
+| F1 across confidence thresholds | Recall across confidence thresholds |
+| --- | --- |
+| [![F1 curve](yolo-tune-images/BoxF1_curve.png)](yolo-tune-images/BoxF1_curve.png) | [![Recall curve](yolo-tune-images/BoxR_curve.png)](yolo-tune-images/BoxR_curve.png) |
+
+</details>
+
+### Sample documents
+
+These validation examples show the different quotation layouts and annotated signature/stamp regions. They are **ground-truth labels**, not pipeline predictions.
+
+[![Quotation samples with signature and stamp annotations](yolo-tune-images/val_batch0_labels.jpg)](yolo-tune-images/val_batch0_labels.jpg)
+
+<details>
+<summary>See a training batch and label distribution</summary>
+
+[![Annotated training batch](yolo-tune-images/train_batch0.jpg)](yolo-tune-images/train_batch0.jpg)
+
+[![Training label distribution](yolo-tune-images/labels.jpg)](yolo-tune-images/labels.jpg)
+
+</details>
+
+Weight formats and loading behavior are documented in [`models/README.md`](models/README.md).
+
+## Project layout
+
+```text
+IntelliExtract-DocAI/
+├── executable.py       # CLI and document pipeline
+├── app.py              # Streamlit interface
+├── src/                # OCR, preprocessing, extraction and detection
+├── config/             # Field rules and dealer/model reference lists
+├── assets/             # Animated README banner
+├── samples/            # Original quotations and a demo sample
+├── models/             # Signature/stamp weights and model notes
+├── sample_output/      # Example extraction response
+├── yolo-tune-images/   # Saved detector training artifacts
+├── requirements-demo.txt # CPU demo dependencies
+└── requirements.txt    # Original Python dependencies
 ```
-.
-├── executable.py       # Main entry point
-├── requirements.txt    # Project dependencies
-├── app.py              # Streamlit demo
-├── src/                # Pipeline logic (OCR, Detection, Extraction)
-├── models/             # Pre-trained YOLO and OCR weights
-├── yolo-tune-images/   # Training visualizations
-└── sample_output/      # Example JSON results
-```
 
----
+## Scope and limitations
 
-## 🛠️ Built With
-- **OCR**: PaddleOCR
-- **Vision**: yolo26, OpenCV
-- **Logic**: RegEx, RapidFuzz (Fuzzy Matching)
-- **UI**: Streamlit
+- Built around **tractor quotations**. Broader invoice extraction is an extension goal, not a validated capability.
+- English/Hindi handling is represented in the OCR configuration. Gujarati support and performance across languages have not been established by a published evaluation.
+- OCR quality, handwriting, rotation, and unfamiliar layouts can affect extracted values. Detection indicates visual presence; it does not authenticate a signature or stamp.
+- Confidence scores are heuristic signals, not measured accuracy or calibrated probabilities.
+- No reproducible end-to-end benchmark or automated test suite is included. The original dependency list uses minimum version constraints; the separate CPU demo list pins the runtime tested here.
+- Inference uses local libraries rather than a paid extraction API. The reported zero API cost excludes compute, storage, and setup costs.
+
+## Background
+
+Originally developed for the **Convolve 4.0 — a Pan-IIT AI/ML Hackathon**, this repository preserves the extraction pipeline, demo interface, model weights, and training artifacts from that work.
+
+## Project status
+
+This is an early-stage hackathon prototype. The application and model weights are included so the original work can be explored, but the pipeline is not production-ready.
+
+Known gaps include incorrect overlay coordinates in the dashboard, a document-type selector that is not connected to the pipeline, and PDF upload text even though the dashboard only accepts images. Some interface labels also overstate language coverage, speed, and validation across document layouts. The detector assumes a five-class mapping, while the included ONNX model records two classes; signature/stamp results should therefore be treated with caution.
+
+Running the app does not establish extraction accuracy. Review all extracted values and detections, and use the CLI for PDF input. These issues are documented here rather than repaired in the preserved source code.
